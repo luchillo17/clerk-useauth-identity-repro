@@ -1,0 +1,26 @@
+{
+  "name": "clerk-useauth-identity-repro",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal repro: Clerk useAuth() return-object identity churn while session ids stay equal",
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^7.9.17",
+    "next": "15.4.7",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.6",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "typescript": "^5.9.2"
+  },
+  "stackblitz": {
+    "startCommand": "npm run dev"
+  }
+}
