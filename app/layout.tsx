@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import {
   ClerkProvider,
-  SignedIn,
-  SignedOut,
+  Show,
   SignInButton,
   SignOutButton,
   UserButton,
@@ -60,24 +59,25 @@ export default function RootLayout({
     );
   }
 
+  // Core 3: ClerkProvider must live inside <body>, not wrap <html>.
   return (
-    <ClerkProvider>
-      <html lang="en">
-        <body>
+    <html lang="en">
+      <body>
+        <ClerkProvider>
           <header className="topbar">
             <strong>useAuth identity churn</strong>
             <span className="spacer" />
-            <SignedOut>
+            <Show when="signed-out">
               <SignInButton mode="modal" />
-            </SignedOut>
-            <SignedIn>
+            </Show>
+            <Show when="signed-in">
               <UserButton />
               <SignOutButton />
-            </SignedIn>
+            </Show>
           </header>
           <main>{children}</main>
-        </body>
-      </html>
-    </ClerkProvider>
+        </ClerkProvider>
+      </body>
+    </html>
   );
 }

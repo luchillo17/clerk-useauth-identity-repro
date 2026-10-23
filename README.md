@@ -22,10 +22,12 @@ While signed in and idle:
 
 **Actual:** that counter climbs on idle / token-refresh ticks without identity changes.
 
+- Core 3 UI: `Show when="signed-in|signed-out"` (not `SignedIn`/`SignedOut`)
+
 ## Stack
 
 - Next.js App Router **15.4.7** (pinned — Next **≥15.5** breaks on StackBlitz / WebContainers: [webcontainer-core#1978](https://github.com/stackblitz/webcontainer-core/issues/1978); webpack is the 15.4 default, so no `--webpack` flag)
-- `@clerk/nextjs` ^7.9.x (matches consumer bump that surfaced the symptom)
+- `@clerk/nextjs` ^7.9.x (Clerk **Core 3**: use `Show when="signed-in"|"signed-out"`, not `SignedIn`/`SignedOut`; `ClerkProvider` inside `<body>`)
 - No Convex deploy required — the page mocks the bridge with `useCallback([auth])`
 
 ## Run locally
