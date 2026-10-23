@@ -1,5 +1,5 @@
-import { Show } from "@clerk/nextjs";
 import { AuthChurnMeter } from "./auth-churn-meter";
+import { AuthGate } from "./auth-gate";
 
 export default function HomePage() {
   return (
@@ -16,20 +16,19 @@ export default function HomePage() {
         <code>useCallback(..., [auth])</code> bridge identity churn.
       </p>
 
-      <Show when="signed-out">
-        <div className="card">
-          <p className="warn">Sign in to start the meter.</p>
-          <p>
-            Set <code>NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</code> (and{" "}
-            <code>CLERK_SECRET_KEY</code> for middleware) in{" "}
-            <code>.env.local</code> — see README.
-          </p>
-        </div>
-      </Show>
-
-      <Show when="signed-in">
-        <AuthChurnMeter />
-      </Show>
+      <AuthGate
+        signedOut={
+          <div className="card">
+            <p className="warn">Sign in to start the meter.</p>
+            <p>
+              Set <code>NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY</code> (and{" "}
+              <code>CLERK_SECRET_KEY</code> for middleware) in{" "}
+              <code>.env.local</code> — see README.
+            </p>
+          </div>
+        }
+        signedIn={<AuthChurnMeter />}
+      />
     </>
   );
 }

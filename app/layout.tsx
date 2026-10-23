@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import {
   ClerkProvider,
-  Show,
   SignInButton,
   SignOutButton,
   UserButton,
 } from "@clerk/nextjs";
 import "./globals.css";
+import { AuthGate } from "./auth-gate";
 
 export const metadata: Metadata = {
   title: "Clerk useAuth() identity churn repro",
@@ -67,13 +67,15 @@ export default function RootLayout({
           <header className="topbar">
             <strong>useAuth identity churn</strong>
             <span className="spacer" />
-            <Show when="signed-out">
-              <SignInButton mode="modal" />
-            </Show>
-            <Show when="signed-in">
-              <UserButton />
-              <SignOutButton />
-            </Show>
+            <AuthGate
+              signedOut={<SignInButton mode="modal" />}
+              signedIn={
+                <>
+                  <UserButton />
+                  <SignOutButton />
+                </>
+              }
+            />
           </header>
           <main>{children}</main>
         </ClerkProvider>

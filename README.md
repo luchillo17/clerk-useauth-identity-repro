@@ -27,7 +27,7 @@ While signed in and idle:
 ## Stack
 
 - Next.js App Router **15.4.7** (pinned — Next **≥15.5** breaks on StackBlitz / WebContainers: [webcontainer-core#1978](https://github.com/stackblitz/webcontainer-core/issues/1978); webpack is the 15.4 default, so no `--webpack` flag)
-- `@clerk/nextjs` ^7.9.x (Clerk **Core 3**: use `Show when="signed-in"|"signed-out"`, not `SignedIn`/`SignedOut`; `ClerkProvider` inside `<body>`)
+- `@clerk/nextjs` ^7.9.x (Clerk **Core 3**). Gate with client `useAuth()` (`app/auth-gate.tsx`). Do **not** use server `Show` — it calls `auth()`/`headers()`, which throws on StackBlitz WebContainers.
 - No Convex deploy required — the page mocks the bridge with `useCallback([auth])`
 
 ## Run locally
