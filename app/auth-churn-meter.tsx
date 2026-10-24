@@ -1,18 +1,21 @@
 "use client";
 
 import { useAuth } from "@clerk/nextjs";
-import {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 type IdSnap = {
   userId: string | null | undefined;
   sessionId: string | null | undefined;
   orgId: string | null | undefined;
+};
+
+type Counts = {
+  objectChurnWhileIdsStable: number;
+  totalObjectChurn: number;
+  isRefreshingFlips: number;
+  getTokenChurnWhileIdsStable: number;
+  bridgeCallbackChurn: number;
+  renderCount: number;
 };
 
 function sameIds(a: IdSnap, b: IdSnap): boolean {
@@ -33,13 +36,9 @@ function readIsRefreshing(auth: object): boolean | undefined {
 /**
  * Proves referential identity churn on Clerk's useAuth() return value.
  *
- * Expected (stable library): while idle with unchanged identity primitives,
- * objectChurnWhileIdsStable stays 0 (or near 0 after initial settle).
- *
- * Actual (bug): counter climbs on idle / token-refresh ticks even though
- * userId, sessionId, and orgId are unchanged — which rebuilds any
- * useCallback/useMemo that lists the whole auth object as a dependency
- * (ConvexProviderWithClerk-style bridges).
+ * Counters live in refs and flush on an interval. Do NOT setState from an
+ * effect that observes `auth` identity — when useAuth() returns a new object
+ * every consumer render (the bug), that feedback loop hits max update depth.
  */
 export function AuthChurnMeter() {
   const auth = useAuth();
@@ -52,15 +51,20 @@ export function AuthChurnMeter() {
   const prevRefreshingRef = useRef(isRefreshing);
   const prevGetTokenRef = useRef(getToken);
   const settledRef = useRef(false);
+  const countsRef = useRef<Counts>({
+    objectChurnWhileIdsStable: 0,
+    totalObjectChurn: 0,
+    isRefreshingFlips: 0,
+    getTokenChurnWhileIdsStable: 0,
+    bridgeCallbackChurn: 0,
+    renderCount: 0,
+  });
+  countsRef.current.renderCount += 1;
 
-  const [objectChurnWhileIdsStable, setObjectChurnWhileIdsStable] = useState(0);
-  const [totalObjectChurn, setTotalObjectChurn] = useState(0);
-  const [isRefreshingFlips, setIsRefreshingFlips] = useState(0);
-  const [getTokenChurnWhileIdsStable, setGetTokenChurnWhileIdsStable] =
-    useState(0);
-  const [bridgeCallbackChurn, setBridgeCallbackChurn] = useState(0);
-  const [renderCount, setRenderCount] = useState(0);
-  const [elapsedSec, setElapsedSec] = useState(0);
+  const [snap, setSnap] = useState(() => ({
+    ...countsRef.current,
+    elapsedSec: 0,
+  }));
 
   // Convex-style: memoize adapter work on the whole auth object.
   const bridge = useCallback(() => {
@@ -76,19 +80,17 @@ export function AuthChurnMeter() {
 
   const prevBridgeRef = useRef(bridge);
 
-  useLayoutEffect(() => {
-    setRenderCount((n) => n + 1);
-  });
-
   useEffect(() => {
     const started = Date.now();
-    const id = window.setInterval(() => {
-      setElapsedSec(Math.floor((Date.now() - started) / 1000));
-    }, 1000);
-    // Give Clerk one frame to settle before counting "idle" churn.
     const settle = window.setTimeout(() => {
       settledRef.current = true;
     }, 1500);
+    const id = window.setInterval(() => {
+      setSnap({
+        ...countsRef.current,
+        elapsedSec: Math.floor((Date.now() - started) / 1000),
+      });
+    }, 250);
     return () => {
       window.clearInterval(id);
       window.clearTimeout(settle);
@@ -97,7 +99,7 @@ export function AuthChurnMeter() {
 
   useEffect(() => {
     if (prevAuthRef.current !== auth) {
-      setTotalObjectChurn((n) => n + 1);
+      countsRef.current.totalObjectChurn += 1;
       const prevIds = prevIdsRef.current;
       const nextIds: IdSnap = { userId, sessionId, orgId };
       if (
@@ -106,7 +108,7 @@ export function AuthChurnMeter() {
         isSignedIn &&
         sameIds(prevIds, nextIds)
       ) {
-        setObjectChurnWhileIdsStable((n) => n + 1);
+        countsRef.current.objectChurnWhileIdsStable += 1;
       }
       prevAuthRef.current = auth;
       prevIdsRef.current = nextIds;
@@ -114,7 +116,7 @@ export function AuthChurnMeter() {
 
     if (prevRefreshingRef.current !== isRefreshing) {
       if (settledRef.current && isRefreshing !== undefined) {
-        setIsRefreshingFlips((n) => n + 1);
+        countsRef.current.isRefreshingFlips += 1;
       }
       prevRefreshingRef.current = isRefreshing;
     }
@@ -128,18 +130,27 @@ export function AuthChurnMeter() {
         isSignedIn &&
         sameIds(prevIds, nextIds)
       ) {
-        setGetTokenChurnWhileIdsStable((n) => n + 1);
+        countsRef.current.getTokenChurnWhileIdsStable += 1;
       }
       prevGetTokenRef.current = getToken;
     }
 
     if (prevBridgeRef.current !== bridge) {
       if (settledRef.current) {
-        setBridgeCallbackChurn((n) => n + 1);
+        countsRef.current.bridgeCallbackChurn += 1;
       }
       prevBridgeRef.current = bridge;
     }
   });
+
+  const {
+    objectChurnWhileIdsStable,
+    totalObjectChurn,
+    isRefreshingFlips,
+    getTokenChurnWhileIdsStable,
+    bridgeCallbackChurn,
+    renderCount,
+  } = snap;
 
   return (
     <div className="card">
@@ -174,7 +185,7 @@ export function AuthChurnMeter() {
           <span>component renders</span>
         </div>
         <div className="metric">
-          <strong>{elapsedSec}s</strong>
+          <strong>{snap.elapsedSec}s</strong>
           <span>idle elapsed (after 1.5s settle)</span>
         </div>
       </div>
@@ -202,7 +213,9 @@ export function AuthChurnMeter() {
         <li>isSignedIn: {String(isSignedIn)}</li>
         <li>
           isRefreshing:{" "}
-          {isRefreshing === undefined ? "(not on UseAuthReturn)" : String(isRefreshing)}
+          {isRefreshing === undefined
+            ? "(not on UseAuthReturn)"
+            : String(isRefreshing)}
         </li>
         <li>userId: {userId ?? "null"}</li>
         <li>sessionId: {sessionId ?? "null"}</li>

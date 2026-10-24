@@ -29,6 +29,8 @@ While signed in and idle:
 - Next.js App Router **15.4.7** (pinned — Next **≥15.5** breaks on StackBlitz / WebContainers: [webcontainer-core#1978](https://github.com/stackblitz/webcontainer-core/issues/1978); webpack is the 15.4 default, so no `--webpack` flag)
 - `@clerk/nextjs` ^7.9.x (Clerk **Core 3**). Gate with client `useAuth()` (`app/auth-gate.tsx`). Do **not** use server `Show` — it calls `auth()`/`headers()`, which throws on StackBlitz WebContainers.
 - No Convex deploy required — the page mocks the bridge with `useCallback([auth])`
+- StackBlitz: `@clerk/nextjs` calls a `cookies().delete` server action on `setActive` (sign-in). WebContainers lack that request scope — `app/clerk-webcontainer-patch.tsx` no-ops it. Prefer local `npm run dev` if login still flakes.
+- Meter counters flush from refs on an interval (avoids max-update-depth when `useAuth()` returns a new object every render).
 
 ## Run locally
 
