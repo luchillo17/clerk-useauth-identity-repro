@@ -7,7 +7,6 @@ import {
 } from "@clerk/nextjs";
 import "./globals.css";
 import { AuthGate } from "./auth-gate";
-import { ClerkWebContainerPatch } from "./clerk-webcontainer-patch";
 
 export const metadata: Metadata = {
   title: "Clerk useAuth() identity churn repro",
@@ -46,7 +45,7 @@ export default function RootLayout({
                   <code>CLERK_SECRET_KEY</code> from the Clerk dashboard
                 </li>
                 <li>
-                  Allow this origin (localhost / StackBlitz preview) under
+                  Allow this origin (<code>http://localhost:3000</code>) under
                   Clerk Domains
                 </li>
                 <li>
@@ -65,7 +64,6 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <ClerkProvider>
-          <ClerkWebContainerPatch />
           <header className="topbar">
             <strong>useAuth identity churn</strong>
             <span className="spacer" />

@@ -31,7 +31,7 @@ While signed in and idle:
 
 ## StackBlitz: unsupported
 
-Do **not** use StackBlitz / WebContainers for this repro. `@clerk/nextjs` App Router sign-in calls a server action that does `cookies().delete(...)`. WebContainers have no Next request scope for that → `POST /` 500 (`cookies().delete was called outside a request scope`), even with local patches. **Run locally** (below). Paste the GitHub URL into Clerk’s bug form.
+Do **not** use StackBlitz / WebContainers for this repro. `@clerk/nextjs` App Router sign-in calls a server action that does `cookies().delete(...)`. WebContainers have no Next request scope for that → `POST /` 500 (`cookies().delete was called outside a request scope`). **Run locally** (below). Paste the GitHub URL into Clerk’s bug form.
 
 ## Run locally
 
