@@ -2,7 +2,7 @@
 
 Public paste target for [clerk/javascript BUG_REPORT.yml](https://github.com/clerk/javascript/issues/new?template=BUG_REPORT.yml) **Reproduction** field.
 
-**Intended public URL (after personal push):**  
+**Public URL:**  
 https://github.com/luchillo17/clerk-useauth-identity-repro
 
 Owner must be personal account [`luchillo17`](https://github.com/luchillo17) — **not** `Vital-Link-360` / `carlos-vitallink360`.
@@ -22,15 +22,16 @@ While signed in and idle:
 
 **Actual:** that counter climbs on idle / token-refresh ticks without identity changes.
 
-- Core 3 UI: `Show when="signed-in|signed-out"` (not `SignedIn`/`SignedOut`)
-
 ## Stack
 
-- Next.js App Router **15.4.7** (pinned — Next **≥15.5** breaks on StackBlitz / WebContainers: [webcontainer-core#1978](https://github.com/stackblitz/webcontainer-core/issues/1978); webpack is the 15.4 default, so no `--webpack` flag)
-- `@clerk/nextjs` ^7.9.x (Clerk **Core 3**). Gate with client `useAuth()` (`app/auth-gate.tsx`). Do **not** use server `Show` — it calls `auth()`/`headers()`, which throws on StackBlitz WebContainers.
-- No Convex deploy required — the page mocks the bridge with `useCallback([auth])`
-- StackBlitz: `@clerk/nextjs` calls a `cookies().delete` server action on `setActive` (sign-in). WebContainers lack that request scope — `app/clerk-webcontainer-patch.tsx` no-ops it. Prefer local `npm run dev` if login still flakes.
-- Meter counters flush from refs on an interval (avoids max-update-depth when `useAuth()` returns a new object every render).
+- Next.js App Router **15.4.7** + `@clerk/nextjs` ^7.9.x (Clerk **Core 3**)
+- Client gate: `app/auth-gate.tsx` (`useAuth`) — not server `Show` / `SignedIn`
+- Meter counters live in refs and flush on an interval (avoids max-update-depth when `useAuth()` returns a new object every render)
+- No Convex deploy — page mocks the bridge with `useCallback([auth])`
+
+## StackBlitz: unsupported
+
+Do **not** use StackBlitz / WebContainers for this repro. `@clerk/nextjs` App Router sign-in calls a server action that does `cookies().delete(...)`. WebContainers have no Next request scope for that → `POST /` 500 (`cookies().delete was called outside a request scope`), even with local patches. **Run locally** (below). Paste the GitHub URL into Clerk’s bug form.
 
 ## Run locally
 
@@ -69,20 +70,14 @@ gh repo create luchillo17/clerk-useauth-identity-churn-repro --public --source=.
 https://github.com/luchillo17/clerk-useauth-identity-repro
 ```
 
-Optional StackBlitz:
-
-```text
-https://stackblitz.com/github/luchillo17/clerk-useauth-identity-repro
-```
-
-StackBlitz boots without keys (setup card). To run the meter: `.env.example` → `.env.local`, set `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` + `CLERK_SECRET_KEY`, allow the StackBlitz preview origin in Clerk Domains, restart `npm run dev`. Do **not** bump Next past 15.4.7 if you need WebContainers.
+StackBlitz is **unsupported** for this `@clerk/nextjs` App Router repro (see above).
 
 ## Env vars
 
 | Var | Required | Notes |
 | --- | --- | --- |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | yes | `pk_test_…` |
-| `CLERK_SECRET_KEY` | yes (middleware) | `sk_test_…` — local / StackBlitz only; never commit |
+| `CLERK_SECRET_KEY` | yes (middleware) | `sk_test_…` — local only; never commit |
 
 No other secrets. No Vital Link product code.
 
