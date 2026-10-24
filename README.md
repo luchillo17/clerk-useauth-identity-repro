@@ -29,9 +29,13 @@ While signed in and idle:
 - Meter counters live in refs and flush on an interval (avoids max-update-depth when `useAuth()` returns a new object every render)
 - No Convex deploy — page mocks the bridge with `useCallback([auth])`
 
-## StackBlitz: unsupported
+## StackBlitz: unsupported (URL kept for reference)
 
-Do **not** use StackBlitz / WebContainers for this repro. `@clerk/nextjs` App Router sign-in calls a server action that does `cookies().delete(...)`. WebContainers have no Next request scope for that → `POST /` 500 (`cookies().delete was called outside a request scope`). **Run locally** (below). Paste the GitHub URL into Clerk’s bug form.
+```text
+https://stackblitz.com/github/luchillo17/clerk-useauth-identity-repro
+```
+
+Do **not** rely on StackBlitz / WebContainers for this repro. `@clerk/nextjs` App Router sign-in calls a server action that does `cookies().delete(...)`. WebContainers have no Next request scope for that → `POST /` 500 (`cookies().delete was called outside a request scope`). **Run locally** (below). Paste the GitHub URL into Clerk’s bug form.
 
 ## Run locally
 
@@ -70,7 +74,11 @@ gh repo create luchillo17/clerk-useauth-identity-churn-repro --public --source=.
 https://github.com/luchillo17/clerk-useauth-identity-repro
 ```
 
-StackBlitz is **unsupported** for this `@clerk/nextjs` App Router repro (see above).
+StackBlitz URL (unsupported — see above):
+
+```text
+https://stackblitz.com/github/luchillo17/clerk-useauth-identity-repro
+```
 
 ## Env vars
 
